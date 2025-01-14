@@ -1,36 +1,40 @@
-import { Component } from 'react';
 import CommentList from './CommentList';
 import AddComment from './AddComment';
 import Loading from './Loading';
 import Error from './Error';
+import { useEffect, useState } from 'react';
 
-class CommentArea extends Component {
-  state = {
+const CommentArea = ({ asin }) => {
+  /* state = {
     comments: [],
     isLoading: true,
     isError: false,
+  }; */
+
+  const [comments, setComments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [changeValue, setChangeValue] = useState(true);
+
+  const changeValueFunction = () => {
+    setChangeValue(!changeValue);
   };
 
-  componentDidMount = () => {
-    this.fetchComments();
-  };
+  useEffect(() => {
+    fetchComments();
+  }, [asin]);
 
-  componentDidUpdate = (prevProps, prevState) => {
-    if (prevProps.asin !== this.props.asin) {
-      this.fetchComments();
-    }
-  };
+  useEffect(() => {
+    fetchComments();
+  }, [changeValue]);
 
-  fetchComments = () => {
-    fetch(
-      `https://striveschool-api.herokuapp.com/api/comments/${this.props.asin}`,
-      {
-        headers: {
-          Authorization:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzU4NzEyNDA3ZGI3MzAwMTU0MDYzYjAiLCJpYXQiOjE3MzY3Nzg0NjUsImV4cCI6MTczNzk4ODA2NX0.r3kLDKA63qCYtNEGvz88POLtNHA99AlVa785vNMDRWA',
-        },
-      }
-    )
+  const fetchComments = () => {
+    fetch(`https://striveschool-api.herokuapp.com/api/comments/${asin}`, {
+      headers: {
+        Authorization:
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzU4NzEyNDA3ZGI3MzAwMTU0MDYzYjAiLCJpYXQiOjE3MzY3Nzg0NjUsImV4cCI6MTczNzk4ODA2NX0.r3kLDKA63qCYtNEGvz88POLtNHA99AlVa785vNMDRWA',
+      },
+    })
       .then((response) => {
         if (response.ok) {
           return response.json();
@@ -40,31 +44,28 @@ class CommentArea extends Component {
       })
 
       .then((arrayComment) => {
-        this.setState({
-          comments: arrayComment,
-          isLoading: false,
-          isError: false,
-        });
+        setComments(arrayComment);
+        setIsLoading(false);
+        setIsError(false);
       })
 
       .catch((err) => {
         console.log(err);
-        this.setState({
-          isError: false,
-        });
+        setIsError(true);
       });
   };
 
-  render() {
-    return (
-      <div className='text-center'>
-        {this.state.isLoading && <Loading />}
-        {this.state.isError && <Error />}
-        <AddComment asin={this.props.asin} />
-        <CommentList commentsToShow={this.state.comments} />
-      </div>
-    );
-  }
-}
+  return (
+    <div className='text-center'>
+      {isLoading && <Loading />}
+      {isError && <Error />}
+      <AddComment asin={asin} changeValueFunction={changeValueFunction} />
+      <CommentList
+        commentsToShow={comments}
+        changeValueFunction={changeValueFunction}
+      />
+    </div>
+  );
+};
 
 export default CommentArea;
